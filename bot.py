@@ -1,12 +1,12 @@
 import discord
 from discord import app_commands
-from discord.ui import View, Select
+from discord.ui import View, Button
 import os
 
 intents = discord.Intents.default()
 intents.message_content = True
 
-GUILD_ID = 1439766744758489111  # keep your guild ID here
+GUILD_ID = 1439766744758489111  # your server ID here
 
 
 class MyBot(discord.Client):
@@ -28,29 +28,16 @@ async def on_ready():
 
 
 # =========================
-# Ticket Dropdown
+# Ticket Button View
 # =========================
 
-class TicketSelect(Select):
+class TicketView(View):
     def __init__(self):
-        options = [
-            discord.SelectOption(label="Editing Help", emoji="❤️‍🔥", description="Need editing support"),
-            discord.SelectOption(label="Trading Help", emoji="😎", description="Trading issues"),
-            discord.SelectOption(label="Staff Complaint", emoji="🤓", description="Report staff"),
-            discord.SelectOption(label="Giveaway", emoji="🎉", description="Giveaway questions")
-        ]
+        super().__init__(timeout=None)
 
-        super().__init__(
-            placeholder="Select ticket type...",
-            min_values=1,
-            max_values=1,
-            options=options
-        )
-
-    async def callback(self, interaction: discord.Interaction):
+    async def create_ticket(self, interaction, ticket_type):
         guild = interaction.guild
         user = interaction.user
-        ticket_type = self.values[0]
 
         overwrites = {
             guild.default_role: discord.PermissionOverwrite(view_channel=False),
@@ -59,34 +46,45 @@ class TicketSelect(Select):
         }
 
         channel = await guild.create_text_channel(
-            name=f"{ticket_type.lower().replace(' ', '-')}-{user.name}",
+            name=f"{ticket_type}-{user.name}",
             overwrites=overwrites
         )
 
-        await channel.send(f"{user.mention} Welcome! This is your **{ticket_type}** ticket.")
+        await channel.send(f"{user.mention} Welcome to your **{ticket_type}** ticket!")
         await interaction.response.send_message(
-            f"✅ Your **{ticket_type}** ticket has been created: {channel.mention}",
+            f"✅ Ticket created: {channel.mention}",
             ephemeral=True
         )
 
+    @discord.ui.button(label="❤️‍🔥 Editing Help", style=discord.ButtonStyle.primary)
+    async def editing(self, interaction: discord.Interaction, button: Button):
+        await self.create_ticket(interaction, "editing")
 
-class TicketView(View):
-    def __init__(self):
-        super().__init__(timeout=None)
-        self.add_item(TicketSelect())
+    @discord.ui.button(label="😎 Trading Help", style=discord.ButtonStyle.secondary)
+    async def trading(self, interaction: discord.Interaction, button: Button):
+        await self.create_ticket(interaction, "trading")
+
+    @discord.ui.button(label="🤓 Staff Complaint", style=discord.ButtonStyle.danger)
+    async def staff(self, interaction: discord.Interaction, button: Button):
+        await self.create_ticket(interaction, "staff-complaint")
+
+    @discord.ui.button(label="🎉 Giveaway", style=discord.ButtonStyle.success)
+    async def giveaway(self, interaction: discord.Interaction, button: Button):
+        await self.create_ticket(interaction, "giveaway")
 
 
 # =========================
 # Slash Command
 # =========================
 
-@bot.tree.command(name="panel", description="Open the ticket panel")
+@bot.tree.command(name="panel", description="Send the ticket panel")
 async def panel(interaction: discord.Interaction):
     embed = discord.Embed(
         title="🎟️ Support Ticket Panel",
-        description="Select the type of ticket you want to create.",
+        description="Click a button below to create a ticket.",
         color=discord.Color.blurple()
     )
+
     await interaction.response.send_message(embed=embed, view=TicketView())
 
 
