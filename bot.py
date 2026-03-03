@@ -115,7 +115,8 @@ class TicketView(View):
             color=discord.Color.blurple()
         )
 
-        embed.set_image(url="https://i.imgur.com/4M34hi2.png")
+        # Automatically use your server logo
+        embed.set_thumbnail(url=guild.icon.url)
 
         await channel.send(
             content=f"{user.mention} {staff_role.mention}",
@@ -157,10 +158,10 @@ async def panel(interaction: discord.Interaction):
         color=discord.Color.blurple()
     )
 
-    embed.set_image(url="https://i.imgur.com/4M34hi2.png")
+    # Automatically uses server logo
+    embed.set_thumbnail(url=interaction.guild.icon.url)
 
     await interaction.response.send_message(embed=embed, view=TicketView())
 
 
 bot.run(os.getenv("TOKEN"))
-
