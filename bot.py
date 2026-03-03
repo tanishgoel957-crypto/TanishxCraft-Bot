@@ -3,11 +3,13 @@ from discord import app_commands
 from discord.ui import View, Button
 import os
 
+# ====== CONFIG ======
+GUILD_ID = 1439766744758489111  # <-- keep your server ID
+# ====================
+
 intents = discord.Intents.default()
 intents.message_content = True
 intents.guilds = True
-
-GUILD_ID = 1439766744758489111  # keep your server ID
 
 class MyBot(discord.Client):
     def __init__(self):
@@ -17,12 +19,13 @@ class MyBot(discord.Client):
     async def setup_hook(self):
         guild = discord.Object(id=GUILD_ID)
         await self.tree.sync(guild=guild)
+        print("Slash commands synced.")
 
 bot = MyBot()
 
-# ========================
-# Ticket Panel View
-# ========================
+# =========================
+# Ticket Panel Button View
+# =========================
 
 class TicketView(View):
     def __init__(self):
@@ -44,12 +47,20 @@ class TicketView(View):
             overwrites=overwrites
         )
 
-        await channel.send(f"{user.mention} 🎫 Your ticket has been created!")
-        await interaction.response.send_message("Ticket created!", ephemeral=True)
+        await channel.send(
+            f"{user.mention} 🎫 Your ticket has been created!\n"
+            "Press the button below to close the ticket.",
+            view=CloseView()
+        )
 
-# ========================
-# Close Button
-# ========================
+        await interaction.response.send_message(
+            "✅ Ticket created!",
+            ephemeral=True
+        )
+
+# =========================
+# Close Ticket Button
+# =========================
 
 class CloseView(View):
     def __init__(self):
@@ -59,18 +70,22 @@ class CloseView(View):
     async def close_ticket(self, interaction: discord.Interaction, button: Button):
         await interaction.channel.delete()
 
-# ========================
-# Slash Command
-# ========================
+# =========================
+# Slash Command: /panel
+# =========================
 
-@bot.tree.command(name="panel", description="Create ticket panel")
+@bot.tree.command(name="panel", description="Create the ticket panel")
 async def panel(interaction: discord.Interaction):
     embed = discord.Embed(
-        title="Support Tickets",
-        description="Click the button below to create a ticket.",
+        title="🎟 Support Tickets",
+        description="Click the button below to create a support ticket.",
         color=discord.Color.blue()
     )
-    await interaction.response.send_message(embed=embed, view=TicketView())
+
+    await interaction.response.send_message(
+        embed=embed,
+        view=TicketView()
+    )
 
 @bot.event
 async def on_ready():
