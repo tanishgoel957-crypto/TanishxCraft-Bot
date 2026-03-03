@@ -1,13 +1,27 @@
 import discord
+from discord import app_commands
 import os
 
 intents = discord.Intents.default()
 intents.message_content = True
 
-client = discord.Client(intents=intents)
+class MyBot(discord.Client):
+    def __init__(self):
+        super().__init__(intents=intents)
+        self.tree = app_commands.CommandTree(self)
 
-@client.event
+    async def setup_hook(self):
+        await self.tree.sync()
+
+bot = MyBot()
+
+@bot.event
 async def on_ready():
-    print(f"Logged in as {client.user}")
+    print(f"Logged in as {bot.user}")
 
-client.run(os.getenv("TOKEN"))
+# Slash command: /ping
+@bot.tree.command(name="ping", description="Test if the bot is working")
+async def ping(interaction: discord.Interaction):
+    await interaction.response.send_message("🏓 Pong! Bot is working.")
+
+bot.run(os.getenv("TOKEN"))
