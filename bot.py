@@ -27,9 +27,7 @@ class MyBot(discord.Client):
 bot = MyBot()
 
 
-# =========================
-# CLOSE BUTTON VIEW
-# =========================
+# ================= CLOSE BUTTON =================
 
 class CloseView(View):
     def __init__(self):
@@ -74,9 +72,7 @@ class CloseView(View):
         await channel.delete()
 
 
-# =========================
-# TICKET PANEL VIEW
-# =========================
+# ================= TICKET VIEW =================
 
 class TicketView(View):
     def __init__(self):
@@ -87,7 +83,7 @@ class TicketView(View):
         guild = interaction.guild
         user = interaction.user
 
-        # Prevent duplicate tickets
+        # Prevent duplicate ticket
         for channel in guild.text_channels:
             if channel.name.endswith(user.name):
                 await interaction.response.send_message(
@@ -132,42 +128,26 @@ class TicketView(View):
             ephemeral=True
         )
 
-    @discord.ui.button(
-        label="❤️‍🔥 Editing Help",
-        style=discord.ButtonStyle.primary,
-        custom_id="editing_ticket"
-    )
-    async def editing(self, interaction: discord.Interaction, button: Button):
+    # ROW 1
+    @discord.ui.button(label="🎟 Support Ticket", style=discord.ButtonStyle.primary, row=0)
+    async def support(self, interaction: discord.Interaction, button: Button):
         await self.create_ticket(interaction, "editing")
 
-    @discord.ui.button(
-        label="😎 Trading Help",
-        style=discord.ButtonStyle.secondary,
-        custom_id="trading_ticket"
-    )
-    async def trading(self, interaction: discord.Interaction, button: Button):
-        await self.create_ticket(interaction, "trading")
-
-    @discord.ui.button(
-        label="🤓 Staff Complaint",
-        style=discord.ButtonStyle.danger,
-        custom_id="staff_ticket"
-    )
-    async def staff(self, interaction: discord.Interaction, button: Button):
+    @discord.ui.button(label="👮 Staff Complaint", style=discord.ButtonStyle.danger, row=0)
+    async def complaint(self, interaction: discord.Interaction, button: Button):
         await self.create_ticket(interaction, "staff")
 
-    @discord.ui.button(
-        label="🎉 Giveaway",
-        style=discord.ButtonStyle.success,
-        custom_id="giveaway_ticket"
-    )
+    # ROW 2
+    @discord.ui.button(label="🎉 Giveaway Claim", style=discord.ButtonStyle.secondary, row=1)
     async def giveaway(self, interaction: discord.Interaction, button: Button):
         await self.create_ticket(interaction, "giveaway")
 
+    @discord.ui.button(label="⭐ Trading Help", style=discord.ButtonStyle.success, row=1)
+    async def trading(self, interaction: discord.Interaction, button: Button):
+        await self.create_ticket(interaction, "trading")
 
-# =========================
-# READY EVENT (PERSISTENT FIX)
-# =========================
+
+# ================= READY (PERSISTENT FIX) =================
 
 @bot.event
 async def on_ready():
@@ -176,16 +156,18 @@ async def on_ready():
     print(f"Logged in as {bot.user}")
 
 
-# =========================
-# PANEL COMMAND
-# =========================
+# ================= PANEL COMMAND =================
 
 @bot.tree.command(name="panel", description="Send the ticket panel")
 async def panel(interaction: discord.Interaction):
 
     embed = discord.Embed(
-        title="",
-        description="",
+        title="🎫 Support Ticket",
+        description=(
+            "Need help? Open a ticket for the appropriate reason listed below.\n\n"
+            "Our staff team will assist you as soon as possible.\n\n"
+            "Please choose the correct category to avoid delays."
+        ),
         color=discord.Color.from_rgb(20, 24, 35)
     )
 
@@ -198,3 +180,4 @@ async def panel(interaction: discord.Interaction):
 
 
 bot.run(os.getenv("TOKEN"))
+
