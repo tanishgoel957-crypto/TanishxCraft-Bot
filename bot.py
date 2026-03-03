@@ -5,13 +5,16 @@ import os
 intents = discord.Intents.default()
 intents.message_content = True
 
+GUILD_ID = 1439766744758489111
+
 class MyBot(discord.Client):
     def __init__(self):
         super().__init__(intents=intents)
         self.tree = app_commands.CommandTree(self)
 
     async def setup_hook(self):
-        await self.tree.sync()
+        guild = discord.Object(id=GUILD_ID)
+        await self.tree.sync(guild=guild)
 
 bot = MyBot()
 
@@ -19,7 +22,6 @@ bot = MyBot()
 async def on_ready():
     print(f"Logged in as {bot.user}")
 
-# Slash command: /ping
 @bot.tree.command(name="ping", description="Test if the bot is working")
 async def ping(interaction: discord.Interaction):
     await interaction.response.send_message("🏓 Pong! Bot is working.")
