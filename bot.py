@@ -3,10 +3,6 @@ from discord import app_commands
 from discord.ui import View, Button
 import os
 
-# ====== CONFIG ======
-GUILD_ID = 1439766744758489111  # <-- keep your server ID
-# ====================
-
 intents = discord.Intents.default()
 intents.message_content = True
 intents.guilds = True
@@ -17,14 +13,14 @@ class MyBot(discord.Client):
         self.tree = app_commands.CommandTree(self)
 
     async def setup_hook(self):
-        guild = discord.Object(id=GUILD_ID)
-        await self.tree.sync(guild=guild)
-        print("Slash commands synced.")
+        # Global sync (works in all servers)
+        await self.tree.sync()
+        print("Global slash commands synced.")
 
 bot = MyBot()
 
 # =========================
-# Ticket Panel Button View
+# Ticket Create Button View
 # =========================
 
 class TicketView(View):
@@ -48,8 +44,7 @@ class TicketView(View):
         )
 
         await channel.send(
-            f"{user.mention} 🎫 Your ticket has been created!\n"
-            "Press the button below to close the ticket.",
+            f"{user.mention} 🎫 Your ticket has been created!",
             view=CloseView()
         )
 
@@ -74,7 +69,7 @@ class CloseView(View):
 # Slash Command: /panel
 # =========================
 
-@bot.tree.command(name="panel", description="Create the ticket panel")
+@bot.tree.command(name="panel", description="Create the support ticket panel")
 async def panel(interaction: discord.Interaction):
     embed = discord.Embed(
         title="🎟 Support Tickets",
