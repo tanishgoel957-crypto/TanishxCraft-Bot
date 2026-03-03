@@ -6,14 +6,14 @@ import os
 intents = discord.Intents.default()
 intents.message_content = True
 
-# ====== YOUR IDs ======
+# ====== CONFIG ======
 GUILD_ID = 1439766744758489111
 STAFF_ROLE_ID = 1439766745153011771
 CATEGORY_ID = 1466623583823597701
 LOG_CHANNEL_ID = 1478235523851227246
 
 BANNER_URL = "https://cdn.discordapp.com/attachments/1466624114411307150/1478240875770413197/content.png"
-# =======================
+# ====================
 
 
 class MyBot(discord.Client):
@@ -42,24 +42,27 @@ class CloseView(View):
     )
     async def close_ticket(self, interaction: discord.Interaction, button: Button):
 
+        await interaction.response.defer()
+
         if STAFF_ROLE_ID not in [role.id for role in interaction.user.roles]:
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 "❌ Only staff can close tickets.",
                 ephemeral=True
             )
             return
 
         channel = interaction.channel
-        transcript = []
+        transcript_lines = []
 
         async for msg in channel.history(limit=None, oldest_first=True):
-            transcript.append(
+            transcript_lines.append(
                 f"{msg.author} ({msg.created_at}): {msg.content}"
             )
 
-        transcript_text = "\n".join(transcript)
+        transcript_text = "\n".join(transcript_lines)
 
         log_channel = bot.get_channel(LOG_CHANNEL_ID)
+
         if log_channel:
             file = discord.File(
                 fp=bytes(transcript_text, "utf-8"),
@@ -80,6 +83,7 @@ class TicketView(View):
         super().__init__(timeout=None)
 
     async def create_ticket(self, interaction, ticket_type):
+
         guild = interaction.guild
         user = interaction.user
 
@@ -167,7 +171,7 @@ class TicketView(View):
         await self.create_ticket(interaction, "trading")
 
 
-# ================= READY (PERSISTENT FIX) =================
+# ================= READY =================
 
 @bot.event
 async def on_ready():
