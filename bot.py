@@ -2,10 +2,10 @@ import discord
 from discord import app_commands
 import os
 
-intents = discord.Intents.default()
-intents.message_content = True
+TOKEN = os.getenv("TOKEN")
+GUILD_ID = 1439766744758489111  # your server ID
 
-GUILD_ID = 1439766744758489111
+intents = discord.Intents.default()
 
 class MyBot(discord.Client):
     def __init__(self):
@@ -15,6 +15,7 @@ class MyBot(discord.Client):
     async def setup_hook(self):
         guild = discord.Object(id=GUILD_ID)
         await self.tree.sync(guild=guild)
+        print("Slash commands synced.")
 
 bot = MyBot()
 
@@ -26,4 +27,4 @@ async def on_ready():
 async def ping(interaction: discord.Interaction):
     await interaction.response.send_message("🏓 Pong! Bot is working.")
 
-bot.run(os.getenv("TOKEN"))
+bot.run(TOKEN)
