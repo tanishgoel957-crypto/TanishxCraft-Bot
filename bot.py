@@ -6,12 +6,14 @@ import os
 intents = discord.Intents.default()
 intents.message_content = True
 
+# ====== YOUR IDs ======
 GUILD_ID = 1439766744758489111
 STAFF_ROLE_ID = 1439766745153011771
 CATEGORY_ID = 1466623583823597701
 LOG_CHANNEL_ID = 1478235523851227246
 
 BANNER_URL = "https://cdn.discordapp.com/attachments/1466624114411307150/1478240875770413197/content.png"
+# =======================
 
 
 class MyBot(discord.Client):
@@ -27,7 +29,7 @@ class MyBot(discord.Client):
 bot = MyBot()
 
 
-# ================= CLOSE BUTTON =================
+# ================= CLOSE VIEW =================
 
 class CloseView(View):
     def __init__(self):
@@ -36,7 +38,7 @@ class CloseView(View):
     @discord.ui.button(
         label="🔒 Close Ticket",
         style=discord.ButtonStyle.danger,
-        custom_id="close_ticket"
+        custom_id="close_ticket_button"
     )
     async def close_ticket(self, interaction: discord.Interaction, button: Button):
 
@@ -48,17 +50,16 @@ class CloseView(View):
             return
 
         channel = interaction.channel
-        messages = []
+        transcript = []
 
         async for msg in channel.history(limit=None, oldest_first=True):
-            messages.append(
+            transcript.append(
                 f"{msg.author} ({msg.created_at}): {msg.content}"
             )
 
-        transcript_text = "\n".join(messages)
+        transcript_text = "\n".join(transcript)
 
         log_channel = bot.get_channel(LOG_CHANNEL_ID)
-
         if log_channel:
             file = discord.File(
                 fp=bytes(transcript_text, "utf-8"),
@@ -79,11 +80,10 @@ class TicketView(View):
         super().__init__(timeout=None)
 
     async def create_ticket(self, interaction, ticket_type):
-
         guild = interaction.guild
         user = interaction.user
 
-        # Prevent duplicate ticket
+        # Limit 1 ticket per user
         for channel in guild.text_channels:
             if channel.name.endswith(user.name):
                 await interaction.response.send_message(
@@ -128,21 +128,41 @@ class TicketView(View):
             ephemeral=True
         )
 
-    # ROW 1
-    @discord.ui.button(label="🎟 Support Ticket", style=discord.ButtonStyle.primary, row=0)
+    # Row 1
+    @discord.ui.button(
+        label="🎟 Support Ticket",
+        style=discord.ButtonStyle.primary,
+        row=0,
+        custom_id="support_ticket_button"
+    )
     async def support(self, interaction: discord.Interaction, button: Button):
         await self.create_ticket(interaction, "editing")
 
-    @discord.ui.button(label="👮 Staff Complaint", style=discord.ButtonStyle.danger, row=0)
+    @discord.ui.button(
+        label="👮 Staff Complaint",
+        style=discord.ButtonStyle.danger,
+        row=0,
+        custom_id="staff_complaint_button"
+    )
     async def complaint(self, interaction: discord.Interaction, button: Button):
         await self.create_ticket(interaction, "staff")
 
-    # ROW 2
-    @discord.ui.button(label="🎉 Giveaway Claim", style=discord.ButtonStyle.secondary, row=1)
+    # Row 2
+    @discord.ui.button(
+        label="🎉 Giveaway Claim",
+        style=discord.ButtonStyle.secondary,
+        row=1,
+        custom_id="giveaway_button"
+    )
     async def giveaway(self, interaction: discord.Interaction, button: Button):
         await self.create_ticket(interaction, "giveaway")
 
-    @discord.ui.button(label="⭐ Trading Help", style=discord.ButtonStyle.success, row=1)
+    @discord.ui.button(
+        label="⭐ Trading Help",
+        style=discord.ButtonStyle.success,
+        row=1,
+        custom_id="trading_help_button"
+    )
     async def trading(self, interaction: discord.Interaction, button: Button):
         await self.create_ticket(interaction, "trading")
 
@@ -180,4 +200,3 @@ async def panel(interaction: discord.Interaction):
 
 
 bot.run(os.getenv("TOKEN"))
-
