@@ -11,6 +11,8 @@ STAFF_ROLE_ID = 1439766745153011771
 CATEGORY_ID = 1466623583823597701
 LOG_CHANNEL_ID = 1478235523851227246
 
+BANNER_URL = "https://cdn.discordapp.com/attachments/1466624114411307150/1478240875770413197/content.png"
+
 
 class MyBot(discord.Client):
     def __init__(self):
@@ -25,23 +27,21 @@ class MyBot(discord.Client):
 bot = MyBot()
 
 
-@bot.event
-async def on_ready():
-    print(f"Logged in as {bot.user}")
-
-
 # =========================
-# Close Ticket Button
+# CLOSE BUTTON VIEW
 # =========================
 
 class CloseView(View):
     def __init__(self):
         super().__init__(timeout=None)
 
-    @discord.ui.button(label="🔒 Close Ticket", style=discord.ButtonStyle.danger)
-    async def close(self, interaction: discord.Interaction, button: Button):
+    @discord.ui.button(
+        label="🔒 Close Ticket",
+        style=discord.ButtonStyle.danger,
+        custom_id="close_ticket"
+    )
+    async def close_ticket(self, interaction: discord.Interaction, button: Button):
 
-        # Only staff can close
         if STAFF_ROLE_ID not in [role.id for role in interaction.user.roles]:
             await interaction.response.send_message(
                 "❌ Only staff can close tickets.",
@@ -53,15 +53,17 @@ class CloseView(View):
         messages = []
 
         async for msg in channel.history(limit=None, oldest_first=True):
-            messages.append(f"{msg.author}: {msg.content}")
+            messages.append(
+                f"{msg.author} ({msg.created_at}): {msg.content}"
+            )
 
-        transcript = "\n".join(messages)
+        transcript_text = "\n".join(messages)
 
         log_channel = bot.get_channel(LOG_CHANNEL_ID)
 
         if log_channel:
             file = discord.File(
-                fp=bytes(transcript, "utf-8"),
+                fp=bytes(transcript_text, "utf-8"),
                 filename=f"{channel.name}-transcript.txt"
             )
             await log_channel.send(
@@ -73,7 +75,7 @@ class CloseView(View):
 
 
 # =========================
-# Ticket Creation
+# TICKET PANEL VIEW
 # =========================
 
 class TicketView(View):
@@ -81,12 +83,13 @@ class TicketView(View):
         super().__init__(timeout=None)
 
     async def create_ticket(self, interaction, ticket_type):
+
         guild = interaction.guild
         user = interaction.user
 
         # Prevent duplicate tickets
         for channel in guild.text_channels:
-            if channel.name == f"{ticket_type}-{user.name}":
+            if channel.name.endswith(user.name):
                 await interaction.response.send_message(
                     "❌ You already have an open ticket.",
                     ephemeral=True
@@ -115,8 +118,8 @@ class TicketView(View):
             color=discord.Color.blurple()
         )
 
-        # Automatically use your server logo
-        embed.set_thumbnail(url=guild.icon.url)
+        if guild.icon:
+            embed.set_thumbnail(url=guild.icon.url)
 
         await channel.send(
             content=f"{user.mention} {staff_role.mention}",
@@ -129,39 +132,69 @@ class TicketView(View):
             ephemeral=True
         )
 
-    @discord.ui.button(label="❤️‍🔥 Editing Help", style=discord.ButtonStyle.primary)
+    @discord.ui.button(
+        label="❤️‍🔥 Editing Help",
+        style=discord.ButtonStyle.primary,
+        custom_id="editing_ticket"
+    )
     async def editing(self, interaction: discord.Interaction, button: Button):
         await self.create_ticket(interaction, "editing")
 
-    @discord.ui.button(label="😎 Trading Help", style=discord.ButtonStyle.secondary)
+    @discord.ui.button(
+        label="😎 Trading Help",
+        style=discord.ButtonStyle.secondary,
+        custom_id="trading_ticket"
+    )
     async def trading(self, interaction: discord.Interaction, button: Button):
         await self.create_ticket(interaction, "trading")
 
-    @discord.ui.button(label="🤓 Staff Complaint", style=discord.ButtonStyle.danger)
+    @discord.ui.button(
+        label="🤓 Staff Complaint",
+        style=discord.ButtonStyle.danger,
+        custom_id="staff_ticket"
+    )
     async def staff(self, interaction: discord.Interaction, button: Button):
-        await self.create_ticket(interaction, "staff-complaint")
+        await self.create_ticket(interaction, "staff")
 
-    @discord.ui.button(label="🎉 Giveaway", style=discord.ButtonStyle.success)
+    @discord.ui.button(
+        label="🎉 Giveaway",
+        style=discord.ButtonStyle.success,
+        custom_id="giveaway_ticket"
+    )
     async def giveaway(self, interaction: discord.Interaction, button: Button):
         await self.create_ticket(interaction, "giveaway")
 
 
 # =========================
-# Panel Command
+# READY EVENT (PERSISTENT FIX)
+# =========================
+
+@bot.event
+async def on_ready():
+    bot.add_view(TicketView())
+    bot.add_view(CloseView())
+    print(f"Logged in as {bot.user}")
+
+
+# =========================
+# PANEL COMMAND
 # =========================
 
 @bot.tree.command(name="panel", description="Send the ticket panel")
 async def panel(interaction: discord.Interaction):
+
     embed = discord.Embed(
-        title="🎟️ Support Ticket Panel",
-        description="Click a button below to create a ticket.",
-        color=discord.Color.blurple()
+        title="",
+        description="",
+        color=discord.Color.from_rgb(20, 24, 35)
     )
 
-    # Automatically uses server logo
-    embed.set_thumbnail(url=interaction.guild.icon.url)
+    embed.set_image(url=BANNER_URL)
 
-    await interaction.response.send_message(embed=embed, view=TicketView())
+    await interaction.response.send_message(
+        embed=embed,
+        view=TicketView()
+    )
 
 
 bot.run(os.getenv("TOKEN"))
